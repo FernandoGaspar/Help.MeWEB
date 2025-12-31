@@ -13,7 +13,7 @@ const testimonials = [
     name: 'Carlos Oliveira',
     role: 'Dono de Oficina',
     avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
-    content: 'O Help.Me mudou minha oficina. Agora tenho uma agenda sempre cheia e clientes que confiam no meu trabalho.',
+    content: 'A Help.Me mudou minha oficina. Agora tenho uma agenda sempre cheia e clientes que confiam no meu trabalho.',
     rating: 5,
   },
   {
@@ -52,7 +52,7 @@ export function TestimonialsSection() {
             <span className="text-primary-400">dizem</span>
           </h2>
           <p className="text-lg text-white/70 max-w-2xl mx-auto">
-            Milhares de motoristas já transformaram o cuidado com seus veículos usando o Help.Me
+            Milhares de motoristas já transformaram o cuidado com seus veículos usando a Help.Me
           </p>
         </motion.div>
 

@@ -47,7 +47,7 @@ export function TermsPage() {
 
               <h2>2. Descrição do Serviço</h2>
               <p>
-                O Help.Me é uma plataforma que conecta motoristas a oficinas e profissionais
+                A Help.Me é uma plataforma que conecta motoristas a oficinas e profissionais
                 do ramo automotivo. Atuamos como intermediários, facilitando o agendamento
                 de manutenções e reparos veiculares.
               </p>

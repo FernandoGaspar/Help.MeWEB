@@ -59,7 +59,7 @@ export function AboutSection() {
             </h3>
             <div className="space-y-4 text-slate-600">
               <p>
-                O Help.Me nasceu da frustração de não encontrar oficinas mecânicas de confiança
+                A Help.Me nasceu da frustração de não encontrar oficinas mecânicas de confiança
                 de forma rápida e segura. Em 2024, decidimos criar uma solução que conectasse
                 motoristas a profissionais automotivos qualificados.
               </p>

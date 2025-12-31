@@ -68,7 +68,7 @@ export function RegisterPage() {
               Crie sua conta
             </h1>
             <p className="text-slate-600">
-              Comece agora mesmo a usar o Help.Me
+              Comece agora mesmo a usar a Help.Me
             </p>
           </div>
 
