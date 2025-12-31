@@ -263,9 +263,9 @@ export function RegisterPage() {
             transition={{ duration: 0.5, delay: 0.2 }}
           >
             <img
-              src="/logo.jpg"
+              src="/logo_transparente.png"
               alt="Help.Me Logo"
-              className="w-24 h-24 mx-auto rounded-3xl mb-8"
+              className="w-24 h-24 mx-auto mb-8"
             />
             <h2 className="text-4xl font-bold mb-4">
               {userType === 'cliente'

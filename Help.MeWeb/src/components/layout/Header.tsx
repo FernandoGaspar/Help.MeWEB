@@ -45,11 +45,13 @@ export function Header() {
           <Link to="/" className="flex items-center gap-2 group">
             <div className="relative">
               <img
-                src="/logo.jpg"
+                src={isScrolled ? "/logo.jpg" : "/logo_transparente.png"}
                 alt="Help.Me Logo"
                 className="w-10 h-10 rounded-xl shadow-lg group-hover:shadow-primary-500/50 transition-shadow duration-300"
               />
-              <div className="absolute -inset-1 bg-gradient-to-br from-primary-500 to-primary-700 rounded-xl blur opacity-30 group-hover:opacity-50 transition-opacity duration-300" />
+              {isScrolled && (
+                <div className="absolute -inset-1 bg-gradient-to-br from-primary-500 to-primary-700 rounded-xl blur opacity-30 group-hover:opacity-50 transition-opacity duration-300" />
+              )}
             </div>
             <span className={cn(
               'text-2xl font-bold transition-colors duration-300',

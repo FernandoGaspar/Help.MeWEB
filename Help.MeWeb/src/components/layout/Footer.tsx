@@ -39,9 +39,9 @@ export function Footer() {
           <div className="lg:col-span-2">
             <Link to="/" className="flex items-center gap-2 mb-6">
               <img
-                src="/logo.jpg"
+                src="/logo_transparente.png"
                 alt="Help.Me Logo"
-                className="w-10 h-10 rounded-xl"
+                className="w-10 h-10"
               />
               <span className="text-2xl font-bold">
                 Help<span className="text-primary-400">.Me</span>
