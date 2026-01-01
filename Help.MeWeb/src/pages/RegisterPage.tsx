@@ -110,7 +110,7 @@ export function RegisterPage() {
   return (
     <div className="min-h-screen flex">
       {/* Left Side - Form */}
-      <div className="flex-1 flex items-center justify-center p-8 bg-white overflow-y-auto">
+      <div className="flex-1 flex items-center justify-center p-8 bg-white overflow-y-auto min-h-screen">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -337,7 +337,7 @@ export function RegisterPage() {
       </div>
 
       {/* Right Side - Image/Branding */}
-      <div className="hidden lg:flex flex-1 bg-gradient-to-br from-secondary-600 via-secondary-700 to-primary-800 items-center justify-center p-12 relative overflow-hidden">
+      <div className="hidden lg:flex flex-1 bg-gradient-to-br from-primary-600 via-primary-700 to-primary-900 items-center justify-center p-12 relative overflow-hidden sticky top-0 h-screen">
         {/* Background Effects */}
         <div className="absolute inset-0">
           <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
@@ -357,12 +357,12 @@ export function RegisterPage() {
             />
             <h2 className="text-4xl font-bold mb-4">
               {userType === 'cliente'
-                ? 'Encontre as melhores oficinas'
+                ? 'Seu veículo em boas mãos'
                 : 'Expanda sua oficina'}
             </h2>
             <p className="text-white/80 text-lg">
               {userType === 'cliente'
-                ? 'Centenas de oficinas verificadas prontas para cuidar do seu veículo com qualidade e segurança.'
+                ? 'Acesse sua conta e gerencie suas manutenções, acompanhe reparos e muito mais.'
                 : 'Alcance mais clientes, gerencie sua agenda e cresça com a gente.'}
             </p>
           </motion.div>
