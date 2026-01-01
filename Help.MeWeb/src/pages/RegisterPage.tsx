@@ -1,34 +1,110 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Eye, EyeOff, Mail, Lock, User, Building2, ArrowLeft, Phone } from 'lucide-react'
+import { Eye, EyeOff, Mail, Lock, User, Building2, ArrowLeft, AlertCircle, CheckCircle } from 'lucide-react'
 import { Button, Input } from '@/components/ui'
 import { cn } from '@/lib/utils'
+import { useAuth } from '@/contexts/AuthContext'
 
 type UserType = 'cliente' | 'prestador'
 
 export function RegisterPage() {
+  const navigate = useNavigate()
+  const { register, isLoading } = useAuth()
+
   const [showPassword, setShowPassword] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
   const [userType, setUserType] = useState<UserType>('cliente')
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState(false)
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    phone: '',
+    login: '',
     password: '',
     confirmPassword: '',
     company: '',
     acceptTerms: false,
   })
 
+  // Tela de sucesso após cadastro
+  if (success) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-secondary-600 via-secondary-700 to-primary-800">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-white rounded-2xl p-8 shadow-2xl text-center max-w-md mx-4"
+        >
+          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <CheckCircle className="w-8 h-8 text-green-600" />
+          </div>
+          <h2 className="text-2xl font-bold text-slate-900 mb-2">
+            Cadastro realizado!
+          </h2>
+          <p className="text-slate-600 mb-6">
+            Sua conta foi criada com sucesso. Agora você pode fazer login.
+          </p>
+          <Button
+            variant="primary"
+            size="lg"
+            className="w-full"
+            onClick={() => navigate('/login')}
+          >
+            Ir para o Login
+          </Button>
+        </motion.div>
+      </div>
+    )
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsLoading(true)
+    setError('')
 
-    // Simular cadastro
-    await new Promise(resolve => setTimeout(resolve, 1500))
+    // Validações
+    if (!formData.name.trim()) {
+      setError('Por favor, digite seu nome')
+      return
+    }
 
-    setIsLoading(false)
+    if (!formData.email.trim()) {
+      setError('Por favor, digite seu e-mail')
+      return
+    }
+
+    if (!formData.login.trim()) {
+      setError('Por favor, escolha um nome de usuário')
+      return
+    }
+
+    if (formData.password.length < 6) {
+      setError('A senha deve ter pelo menos 6 caracteres')
+      return
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      setError('As senhas não coincidem')
+      return
+    }
+
+    if (!formData.acceptTerms) {
+      setError('Você precisa aceitar os termos de uso')
+      return
+    }
+
+    const result = await register({
+      nome: formData.name,
+      email: formData.email,
+      login: formData.login,
+      senha: formData.password,
+      companhia: formData.company || formData.name,
+    })
+
+    if (result.success) {
+      setSuccess(true)
+    } else {
+      setError(result.message || 'Erro ao criar conta')
+    }
   }
 
   return (
@@ -117,6 +193,18 @@ export function RegisterPage() {
             </p>
           </div>
 
+          {/* Error Message */}
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-center gap-3 text-red-700"
+            >
+              <AlertCircle className="w-5 h-5 flex-shrink-0" />
+              <span className="text-sm">{error}</span>
+            </motion.div>
+          )}
+
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-5">
             <Input
@@ -140,12 +228,12 @@ export function RegisterPage() {
             />
 
             <Input
-              label="Telefone"
-              type="tel"
-              placeholder="(11) 99999-9999"
-              icon={<Phone className="w-5 h-5" />}
-              value={formData.phone}
-              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+              label="Nome de usuário"
+              type="text"
+              placeholder="seu.usuario"
+              icon={<User className="w-5 h-5" />}
+              value={formData.login}
+              onChange={(e) => setFormData({ ...formData, login: e.target.value })}
               required
             />
 
@@ -164,7 +252,7 @@ export function RegisterPage() {
               <Input
                 label="Senha"
                 type={showPassword ? 'text' : 'password'}
-                placeholder="Mínimo 8 caracteres"
+                placeholder="Mínimo 6 caracteres"
                 icon={<Lock className="w-5 h-5" />}
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}

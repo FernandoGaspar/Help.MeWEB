@@ -1,27 +1,84 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Eye, EyeOff, Mail, Lock, ArrowLeft } from 'lucide-react'
+import { Eye, EyeOff, User, Lock, ArrowLeft, AlertCircle, CheckCircle } from 'lucide-react'
 import { Button, Input } from '@/components/ui'
+import { useAuth } from '@/contexts/AuthContext'
 
 export function LoginPage() {
+  const navigate = useNavigate()
+  const { login, isLoading, isAuthenticated, user } = useAuth()
+
   const [showPassword, setShowPassword] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState('')
   const [formData, setFormData] = useState({
-    email: '',
-    password: '',
+    login: '',
+    senha: '',
   })
+
+  // Se já estiver autenticado, mostrar mensagem de sucesso
+  if (isAuthenticated && user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-600 via-primary-700 to-primary-900">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-white rounded-2xl p-8 shadow-2xl text-center max-w-md mx-4"
+        >
+          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <CheckCircle className="w-8 h-8 text-green-600" />
+          </div>
+          <h2 className="text-2xl font-bold text-slate-900 mb-2">
+            Bem-vindo, {user.apelido || user.name}!
+          </h2>
+          <p className="text-slate-600 mb-6">
+            Login realizado com sucesso.
+          </p>
+          <div className="space-y-3">
+            <Button
+              variant="primary"
+              size="lg"
+              className="w-full"
+              onClick={() => window.location.href = 'http://app.helpmebr.com.br'}
+            >
+              Acessar o App
+            </Button>
+            <Button
+              variant="outline"
+              size="lg"
+              className="w-full"
+              onClick={() => navigate('/')}
+            >
+              Voltar para o site
+            </Button>
+          </div>
+        </motion.div>
+      </div>
+    )
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsLoading(true)
+    setError('')
 
-    // Simular login
-    await new Promise(resolve => setTimeout(resolve, 1500))
+    if (!formData.login.trim()) {
+      setError('Por favor, digite seu usuário')
+      return
+    }
 
-    setIsLoading(false)
-    // Redirecionar após login
-    // navigate('/dashboard')
+    if (!formData.senha.trim()) {
+      setError('Por favor, digite sua senha')
+      return
+    }
+
+    const result = await login({
+      login: formData.login,
+      senha: formData.senha,
+    })
+
+    if (!result.success) {
+      setError(result.message || 'Erro ao fazer login')
+    }
   }
 
   return (
@@ -65,15 +122,27 @@ export function LoginPage() {
             </p>
           </div>
 
+          {/* Error Message */}
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-center gap-3 text-red-700"
+            >
+              <AlertCircle className="w-5 h-5 flex-shrink-0" />
+              <span className="text-sm">{error}</span>
+            </motion.div>
+          )}
+
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
             <Input
-              label="E-mail"
-              type="email"
-              placeholder="seu@email.com"
-              icon={<Mail className="w-5 h-5" />}
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              label="Usuário"
+              type="text"
+              placeholder="seu.usuario"
+              icon={<User className="w-5 h-5" />}
+              value={formData.login}
+              onChange={(e) => setFormData({ ...formData, login: e.target.value })}
               required
             />
 
@@ -81,10 +150,10 @@ export function LoginPage() {
               <Input
                 label="Senha"
                 type={showPassword ? 'text' : 'password'}
-                placeholder="••••••••"
+                placeholder="Digite sua senha"
                 icon={<Lock className="w-5 h-5" />}
-                value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                value={formData.senha}
+                onChange={(e) => setFormData({ ...formData, senha: e.target.value })}
                 required
               />
               <button
