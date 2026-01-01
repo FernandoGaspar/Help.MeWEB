@@ -1,5 +1,7 @@
 export { LandingPage } from './LandingPage'
 export { LoginPage } from './LoginPage'
 export { RegisterPage } from './RegisterPage'
+export { ForgotPasswordPage } from './ForgotPasswordPage'
+export { FAQPage } from './FAQPage'
 export { PrivacyPage } from './PrivacyPage'
 export { TermsPage } from './TermsPage'

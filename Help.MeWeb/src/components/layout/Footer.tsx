@@ -6,7 +6,7 @@ const footerLinks = {
     { name: 'Funcionalidades', href: '/#features' },
     { name: 'Como Funciona', href: '/#how-it-works' },
     { name: 'Serviços', href: '/#services' },
-    { name: 'FAQ', href: '/#faq' },
+    { name: 'FAQ', href: '/faq' },
   ],
   empresa: [
     { name: 'Sobre Nós', href: '/#about' },

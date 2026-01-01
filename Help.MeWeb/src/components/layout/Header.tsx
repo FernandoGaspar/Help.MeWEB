@@ -10,6 +10,7 @@ const navLinks = [
   { name: 'Funcionalidades', href: '/#features' },
   { name: 'Como Funciona', href: '/#how-it-works' },
   { name: 'Sobre Nós', href: '/#about' },
+  { name: 'FAQ', href: '/faq' },
   { name: 'Contato', href: '/#contact' },
 ]
 

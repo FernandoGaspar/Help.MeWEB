@@ -1,12 +1,20 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Eye, EyeOff, Mail, Lock, User, Building2, ArrowLeft, AlertCircle, CheckCircle } from 'lucide-react'
-import { Button, Input } from '@/components/ui'
+import { Button, Input, PasswordStrength } from '@/components/ui'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/contexts/AuthContext'
 
 type UserType = 'cliente' | 'prestador'
+
+// Validadores
+const isValidEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+const isValidUsername = (username: string) => /^[a-zA-Z0-9._]+$/.test(username) && username.length >= 3
+const isValidFullName = (name: string) => {
+  const parts = name.trim().split(/\s+/)
+  return parts.length >= 2 && parts.every(part => part.length >= 2)
+}
 
 export function RegisterPage() {
   const navigate = useNavigate()
@@ -16,6 +24,7 @@ export function RegisterPage() {
   const [userType, setUserType] = useState<UserType>('cliente')
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
+  const [touched, setTouched] = useState<Record<string, boolean>>({})
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -25,6 +34,39 @@ export function RegisterPage() {
     company: '',
     acceptTerms: false,
   })
+
+  // Validações em tempo real
+  const validations = useMemo(() => ({
+    name: {
+      isValid: isValidFullName(formData.name),
+      error: formData.name.trim().length > 0 && !isValidFullName(formData.name)
+        ? 'Digite seu nome completo (nome e sobrenome)' : '',
+    },
+    email: {
+      isValid: isValidEmail(formData.email),
+      error: formData.email.length > 0 && !isValidEmail(formData.email)
+        ? 'Digite um e-mail válido' : '',
+    },
+    login: {
+      isValid: isValidUsername(formData.login),
+      error: formData.login.length > 0 && !isValidUsername(formData.login)
+        ? 'Apenas letras, números e pontos (mín. 3 caracteres)' : '',
+    },
+    password: {
+      isValid: formData.password.length >= 6,
+      error: formData.password.length > 0 && formData.password.length < 6
+        ? 'Mínimo 6 caracteres' : '',
+    },
+    confirmPassword: {
+      isValid: formData.confirmPassword === formData.password && formData.confirmPassword.length > 0,
+      error: formData.confirmPassword.length > 0 && formData.confirmPassword !== formData.password
+        ? 'As senhas não coincidem' : '',
+    },
+  }), [formData])
+
+  const handleBlur = (field: string) => {
+    setTouched(prev => ({ ...prev, [field]: true }))
+  }
 
   // Tela de sucesso após cadastro
   if (success) {
@@ -214,6 +256,9 @@ export function RegisterPage() {
               icon={<User className="w-5 h-5" />}
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              onBlur={() => handleBlur('name')}
+              error={touched.name ? validations.name.error : undefined}
+              isValid={touched.name && validations.name.isValid}
               required
             />
 
@@ -224,6 +269,9 @@ export function RegisterPage() {
               icon={<Mail className="w-5 h-5" />}
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              onBlur={() => handleBlur('email')}
+              error={touched.email ? validations.email.error : undefined}
+              isValid={touched.email && validations.email.isValid}
               required
             />
 
@@ -234,6 +282,10 @@ export function RegisterPage() {
               icon={<User className="w-5 h-5" />}
               value={formData.login}
               onChange={(e) => setFormData({ ...formData, login: e.target.value })}
+              onBlur={() => handleBlur('login')}
+              error={touched.login ? validations.login.error : undefined}
+              isValid={touched.login && validations.login.isValid}
+              hint="Apenas letras, números e pontos"
               required
             />
 
@@ -248,23 +300,28 @@ export function RegisterPage() {
               />
             )}
 
-            <div className="relative">
-              <Input
-                label="Senha"
-                type={showPassword ? 'text' : 'password'}
-                placeholder="Mínimo 6 caracteres"
-                icon={<Lock className="w-5 h-5" />}
-                value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                required
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-[38px] text-slate-400 hover:text-slate-600"
-              >
-                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-              </button>
+            <div>
+              <div className="relative">
+                <Input
+                  label="Senha"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Mínimo 6 caracteres"
+                  icon={<Lock className="w-5 h-5" />}
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  onBlur={() => handleBlur('password')}
+                  error={touched.password ? validations.password.error : undefined}
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-[38px] text-slate-400 hover:text-slate-600"
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
+              <PasswordStrength password={formData.password} />
             </div>
 
             <Input
@@ -274,6 +331,9 @@ export function RegisterPage() {
               icon={<Lock className="w-5 h-5" />}
               value={formData.confirmPassword}
               onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+              onBlur={() => handleBlur('confirmPassword')}
+              error={touched.confirmPassword ? validations.confirmPassword.error : undefined}
+              isValid={touched.confirmPassword && validations.confirmPassword.isValid}
               required
             />
 
