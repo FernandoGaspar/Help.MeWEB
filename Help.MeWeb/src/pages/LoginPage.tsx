@@ -39,7 +39,7 @@ export function LoginPage() {
               variant="primary"
               size="lg"
               className="w-full"
-              onClick={() => window.location.href = 'http://app.helpmebr.com.br'}
+              onClick={() => window.location.href = '/app'}
             >
               Acessar o App
             </Button>
