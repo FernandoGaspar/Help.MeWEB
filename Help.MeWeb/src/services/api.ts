@@ -1,6 +1,6 @@
 import type { User, AuthResult, LoginCredentials, RegisterData } from '../types/auth';
 
-const BASE_URL = 'http://fernandogasparjr.ddns.net:8090';
+const BASE_URL = import.meta.env.DEV ? 'http://localhost:4011' : 'http://fernandogasparjr.ddns.net:8090';
 const REQUEST_TIMEOUT = 10000;
 
 async function fetchWithTimeout(url: string, options: RequestInit): Promise<Response> {
@@ -164,6 +164,107 @@ export const api = {
         return { success: false, message: 'Tempo de requisição excedido' };
       }
       return { success: false, message: `Erro de conexão: ${error}` };
+    }
+  },
+
+  // Ativacao de conta
+  async validarTokenAtivacao(token: string): Promise<{
+    valido: boolean;
+    idUsuario?: number;
+    nomeUsuario?: string;
+    email?: string;
+    mensagem?: string;
+  }> {
+    try {
+      const response = await fetchWithTimeout(`${BASE_URL}/validarTokenAtivacao`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token }),
+      });
+
+      const data = await response.json();
+
+      if (response.status === 200 && data.valido) {
+        return {
+          valido: true,
+          idUsuario: data.idUsuario,
+          nomeUsuario: data.nomeUsuario,
+          email: data.email,
+        };
+      }
+
+      return { valido: false, mensagem: data.mensagem || 'Token invalido ou expirado' };
+    } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') {
+        return { valido: false, mensagem: 'Tempo de requisicao excedido' };
+      }
+      return { valido: false, mensagem: `Erro de conexao: ${error}` };
+    }
+  },
+
+  async ativarConta(token: string, novaSenha: string): Promise<{
+    status: string;
+    mensagem?: string;
+    idUsuario?: number;
+    nomeUsuario?: string;
+    email?: string;
+  }> {
+    try {
+      const response = await fetchWithTimeout(`${BASE_URL}/ativarConta`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, novaSenha }),
+      });
+
+      const data = await response.json();
+
+      if (response.status === 200 && data.status === 'sucesso') {
+        return {
+          status: 'sucesso',
+          mensagem: data.mensagem || 'Conta ativada com sucesso',
+          idUsuario: data.idUsuario,
+          nomeUsuario: data.nomeUsuario,
+          email: data.email,
+        };
+      }
+
+      return { status: 'erro', mensagem: data.mensagem || 'Erro ao ativar conta' };
+    } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') {
+        return { status: 'erro', mensagem: 'Tempo de requisicao excedido' };
+      }
+      return { status: 'erro', mensagem: `Erro de conexao: ${error}` };
+    }
+  },
+
+  async reenviarEmailAtivacao(email: string): Promise<{
+    status: string;
+    mensagem?: string;
+    email?: string;
+  }> {
+    try {
+      const response = await fetchWithTimeout(`${BASE_URL}/reenviarEmailAtivacao`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+
+      if (response.status === 200 && data.status === 'sucesso') {
+        return {
+          status: 'sucesso',
+          mensagem: data.mensagem || 'E-mail de ativacao reenviado',
+          email: data.email,
+        };
+      }
+
+      return { status: 'erro', mensagem: data.mensagem || 'Erro ao reenviar e-mail' };
+    } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') {
+        return { status: 'erro', mensagem: 'Tempo de requisicao excedido' };
+      }
+      return { status: 'erro', mensagem: `Erro de conexao: ${error}` };
     }
   },
 };

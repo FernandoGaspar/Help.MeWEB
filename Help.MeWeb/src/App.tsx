@@ -1,5 +1,5 @@
 import { Routes, Route } from 'react-router-dom'
-import { LandingPage, LoginPage, RegisterPage, ForgotPasswordPage, FAQPage, PrivacyPage, TermsPage } from '@/pages'
+import { LandingPage, LoginPage, RegisterPage, ForgotPasswordPage, FAQPage, PrivacyPage, TermsPage, ActivateAccountPage } from '@/pages'
 import { AuthProvider } from '@/contexts/AuthContext'
 
 function App() {
@@ -13,6 +13,7 @@ function App() {
         <Route path="/faq" element={<FAQPage />} />
         <Route path="/privacidade" element={<PrivacyPage />} />
         <Route path="/termos" element={<TermsPage />} />
+        <Route path="/ativar-conta" element={<ActivateAccountPage />} />
       </Routes>
     </AuthProvider>
   )
