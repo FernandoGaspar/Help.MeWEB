@@ -1,6 +1,6 @@
 import type { User, AuthResult, LoginCredentials, RegisterData } from '../types/auth'
 
-const BASE_URL = import.meta.env.DEV ? 'http://localhost:4011' : 'http://fernandogasparjr.ddns.net:4011'
+const BASE_URL = import.meta.env.DEV ? 'http://localhost:4011' : 'http://fernandogasparjr.ddns.net:8090'
 const REQUEST_TIMEOUT = 10000
 
 // Mapear perfil para role string (duplicado aqui para evitar import circular)
