@@ -45,7 +45,7 @@ export function ActivateAccountPage() {
     try {
       const result = await api.validarTokenAtivacao(token)
 
-      if (result.valido) {
+      if (result.valido && result.idUsuario && result.nomeUsuario && result.email) {
         setTokenData({
           idUsuario: result.idUsuario,
           nomeUsuario: result.nomeUsuario,
@@ -90,28 +90,6 @@ export function ActivateAccountPage() {
       }
     } catch {
       setError('Erro ao ativar conta. Tente novamente.')
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const handleResendEmail = async () => {
-    if (!tokenData?.email) return
-
-    setIsLoading(true)
-    setError('')
-
-    try {
-      const result = await api.reenviarEmailAtivacao(tokenData.email)
-
-      if (result.status === 'sucesso') {
-        setError('')
-        alert('Um novo e-mail de ativacao foi enviado!')
-      } else {
-        setError(result.mensagem || 'Erro ao reenviar e-mail')
-      }
-    } catch {
-      setError('Erro ao reenviar e-mail')
     } finally {
       setIsLoading(false)
     }
