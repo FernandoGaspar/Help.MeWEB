@@ -1,13 +1,14 @@
-import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Eye, EyeOff, User, Lock, ArrowLeft, AlertCircle, CheckCircle } from 'lucide-react'
+import { Eye, EyeOff, User, Lock, ArrowLeft, AlertCircle } from 'lucide-react'
 import { Button, Input } from '@/components/ui'
 import { useAuth } from '@/contexts/AuthContext'
 
 export function LoginPage() {
   const navigate = useNavigate()
-  const { login, isLoading, isAuthenticated, user } = useAuth()
+  const location = useLocation()
+  const { login, isLoading, isAuthenticated, getRedirectPath } = useAuth()
 
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
@@ -16,46 +17,15 @@ export function LoginPage() {
     senha: '',
   })
 
-  // Se já estiver autenticado, mostrar mensagem de sucesso
-  if (isAuthenticated && user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-600 via-primary-700 to-primary-900">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="bg-white rounded-2xl p-8 shadow-2xl text-center max-w-md mx-4"
-        >
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <CheckCircle className="w-8 h-8 text-green-600" />
-          </div>
-          <h2 className="text-2xl font-bold text-slate-900 mb-2">
-            Bem-vindo, {user.apelido || user.name}!
-          </h2>
-          <p className="text-slate-600 mb-6">
-            Login realizado com sucesso.
-          </p>
-          <div className="space-y-3">
-            <Button
-              variant="primary"
-              size="lg"
-              className="w-full"
-              onClick={() => window.location.href = '/app'}
-            >
-              Acessar o App
-            </Button>
-            <Button
-              variant="outline"
-              size="lg"
-              className="w-full"
-              onClick={() => navigate('/')}
-            >
-              Voltar para o site
-            </Button>
-          </div>
-        </motion.div>
-      </div>
-    )
-  }
+  // Redirecionar automaticamente se ja estiver autenticado
+  useEffect(() => {
+    if (isAuthenticated) {
+      // Verificar se ha uma pagina de origem para redirecionar
+      const from = (location.state as { from?: { pathname: string } })?.from?.pathname
+      const redirectPath = from || getRedirectPath()
+      navigate(redirectPath, { replace: true })
+    }
+  }, [isAuthenticated, navigate, getRedirectPath, location.state])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -76,7 +46,9 @@ export function LoginPage() {
       senha: formData.senha,
     })
 
-    if (!result.success) {
+    if (result.success) {
+      // O useEffect cuidara do redirecionamento
+    } else {
       setError(result.message || 'Erro ao fazer login')
     }
   }

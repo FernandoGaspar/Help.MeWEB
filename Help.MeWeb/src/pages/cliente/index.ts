@@ -1,0 +1,6 @@
+export { ClienteLayout } from './ClienteLayout'
+export { HomePage } from './HomePage'
+export { SolicitarServicoPage } from './SolicitarServicoPage'
+export { MeusServicosPage } from './MeusServicosPage'
+export { HistoricoPage } from './HistoricoPage'
+export { OficinasPage } from './OficinasPage'
