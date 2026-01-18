@@ -36,45 +36,43 @@ export const api = {
       })
 
       if (response.status === 200) {
-        const bodyString = await response.text()
-        const firstDecode = JSON.parse(bodyString)
-        const data = JSON.parse(firstDecode)
+        const usuario = await response.json()
 
-        if (Array.isArray(data) && data.length > 0) {
-          const usuario = data[0]
-
-          if (usuario.Token === '0' || !usuario.idUsuario) {
-            return { success: false, message: 'Usuario ou senha invalidos.' }
-          }
-
-          // Mapear perfil para role
-          const idPerfilUsuario = usuario.idPerfilUsuario || 4
-          const role = profileToRole[idPerfilUsuario] || 'cliente'
-
-          const user: User = {
-            id: usuario.idUsuario?.toString() || '',
-            name: usuario.NomeUsuario || usuario.Nome || usuario.Apelido || '',
-            email: usuario.Email || '',
-            token: usuario.Token || '',
-            companhia: usuario.Companhia || '',
-            login: usuario.Login || '',
-            apelido: usuario.Apelido || '',
-            // Novos campos de perfil
-            idPerfilUsuario,
-            role,
-            contexto: {
-              idCliente: usuario.idCliente || null,
-              idFornecedor: usuario.idFornecedor || null,
-              idFilial: usuario.idFilial || null,
-              isMatriz: usuario.isMatriz || null,
-            },
-            primeiroAcesso: usuario.primeiroAcesso === true || usuario.PrimeiroAcesso === 1,
-          }
-
-          return { success: true, user }
+        // Verificar se é erro da API
+        if (usuario.status === 'erro') {
+          return { success: false, message: usuario.mensagem || 'Usuario ou senha invalidos.' }
         }
 
-        return { success: false, message: 'Usuario ou senha invalidos.' }
+        // Verificar token invalido
+        if (usuario.Token === '0' || !usuario.idUsuario) {
+          return { success: false, message: 'Usuario ou senha invalidos.' }
+        }
+
+        // Mapear perfil para role
+        const idPerfilUsuario = usuario.idPerfilUsuario || 4
+        const role = profileToRole[idPerfilUsuario] || 'cliente'
+
+        const user: User = {
+          id: usuario.idUsuario?.toString() || '',
+          name: usuario.NomeUsuario || usuario.Nome || usuario.Apelido || '',
+          email: usuario.Email || '',
+          token: usuario.Token || '',
+          companhia: usuario.Companhia || '',
+          login: usuario.Login || '',
+          apelido: usuario.Apelido || '',
+          // Novos campos de perfil
+          idPerfilUsuario,
+          role,
+          contexto: {
+            idCliente: usuario.idCliente || null,
+            idFornecedor: usuario.idFornecedor || null,
+            idFilial: usuario.idFilial || null,
+            isMatriz: usuario.isMatriz || null,
+          },
+          primeiroAcesso: usuario.primeiroAcesso === true || usuario.PrimeiroAcesso === 1,
+        }
+
+        return { success: true, user }
       }
 
       if (response.status === 401) {
@@ -306,4 +304,180 @@ export const api = {
       return { status: 'erro', mensagem: `Erro de conexao: ${error}` }
     }
   },
+
+  // ==================== PEDIDOS ====================
+
+  async listaPedidos(token: string, idStatus: number): Promise<{
+    success: boolean
+    pedidos: Pedido[]
+    message?: string
+  }> {
+    try {
+      const response = await fetchWithTimeout(`${BASE_URL}/listaPedidos`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ idStatus }),
+      })
+
+      if (response.status === 200) {
+        const data = await response.json()
+        // API retorna array direto ou objeto com status
+        if (Array.isArray(data)) {
+          return { success: true, pedidos: data }
+        }
+        if (data.status === 'erro') {
+          return { success: false, pedidos: [], message: data.mensagem }
+        }
+        return { success: true, pedidos: data.pedidos || [] }
+      }
+
+      if (response.status === 401) {
+        return { success: false, pedidos: [], message: 'Sessao expirada' }
+      }
+
+      return { success: false, pedidos: [], message: `Erro no servidor (${response.status})` }
+    } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') {
+        return { success: false, pedidos: [], message: 'Tempo de requisicao excedido' }
+      }
+      return { success: false, pedidos: [], message: `Erro de conexao: ${error}` }
+    }
+  },
+
+  // ==================== OPERADORES ====================
+
+  async listaOperadores(token: string): Promise<{
+    success: boolean
+    operadores: Operador[]
+    message?: string
+  }> {
+    try {
+      const response = await fetchWithTimeout(`${BASE_URL}/listaOperadores`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({}),
+      })
+
+      if (response.status === 200) {
+        const data = await response.json()
+        if (data.status === 'sucesso') {
+          return { success: true, operadores: data.operadores || [] }
+        }
+        return { success: false, operadores: [], message: data.mensagem }
+      }
+
+      if (response.status === 401) {
+        return { success: false, operadores: [], message: 'Sessao expirada' }
+      }
+
+      return { success: false, operadores: [], message: `Erro no servidor (${response.status})` }
+    } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') {
+        return { success: false, operadores: [], message: 'Tempo de requisicao excedido' }
+      }
+      return { success: false, operadores: [], message: `Erro de conexao: ${error}` }
+    }
+  },
+
+  async cadastrarOperador(token: string, data: {
+    nome: string
+    email: string
+    login: string
+    senha: string
+  }): Promise<{
+    success: boolean
+    message?: string
+    idUsuario?: number
+  }> {
+    try {
+      const response = await fetchWithTimeout(`${BASE_URL}/cadastroOperador`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(data),
+      })
+
+      const result = await response.json()
+
+      if (response.status === 200 && result.status === 'sucesso') {
+        return {
+          success: true,
+          message: result.mensagem || 'Operador cadastrado com sucesso',
+          idUsuario: result.idUsuario,
+        }
+      }
+
+      return { success: false, message: result.mensagem || 'Erro ao cadastrar operador' }
+    } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') {
+        return { success: false, message: 'Tempo de requisicao excedido' }
+      }
+      return { success: false, message: `Erro de conexao: ${error}` }
+    }
+  },
+
+  async alterarStatusOperador(token: string, idUsuario: number, ativo: boolean): Promise<{
+    success: boolean
+    message?: string
+  }> {
+    try {
+      const response = await fetchWithTimeout(`${BASE_URL}/alterarStatusOperador`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ idUsuario, ativo }),
+      })
+
+      const result = await response.json()
+
+      if (response.status === 200 && result.status === 'sucesso') {
+        return { success: true, message: result.mensagem }
+      }
+
+      return { success: false, message: result.mensagem || 'Erro ao alterar status' }
+    } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') {
+        return { success: false, message: 'Tempo de requisicao excedido' }
+      }
+      return { success: false, message: `Erro de conexao: ${error}` }
+    }
+  },
+}
+
+// ==================== TIPOS ====================
+
+export interface Pedido {
+  idPedido: number
+  NumeroPedido?: string
+  NomeCliente?: string
+  EmailCliente?: string
+  TelefoneCliente?: string
+  Placa?: string
+  Modelo?: string
+  DescricaoServico?: string
+  Observacoes?: string
+  idStatusPedido: number
+  StatusPedido?: string
+  DataPedido?: string
+  DataAtualizacao?: string
+  ValorTotal?: number
+}
+
+export interface Operador {
+  idUsuario: number
+  NomeUsuario: string
+  Email: string
+  Login: string
+  Ativo: boolean
+  DataCadastro?: string
 }

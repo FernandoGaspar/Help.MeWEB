@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Eye, EyeOff, User, Lock, ArrowLeft, AlertCircle } from 'lucide-react'
+import { Eye, EyeOff, Mail, Lock, ArrowLeft, AlertCircle } from 'lucide-react'
 import { Button, Input } from '@/components/ui'
 import { useAuth } from '@/contexts/AuthContext'
 
@@ -32,7 +32,7 @@ export function LoginPage() {
     setError('')
 
     if (!formData.login.trim()) {
-      setError('Por favor, digite seu usuário')
+      setError('Por favor, digite seu e-mail ou usuario')
       return
     }
 
@@ -109,10 +109,10 @@ export function LoginPage() {
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
             <Input
-              label="Usuário"
+              label="E-mail ou Usuario"
               type="text"
-              placeholder="seu.usuario"
-              icon={<User className="w-5 h-5" />}
+              placeholder="seu@email.com ou usuario"
+              icon={<Mail className="w-5 h-5" />}
               value={formData.login}
               onChange={(e) => setFormData({ ...formData, login: e.target.value })}
               required

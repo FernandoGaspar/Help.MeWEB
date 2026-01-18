@@ -5,7 +5,7 @@ import { ProtectedRoute } from '@/components/auth'
 import { UserProfile } from '@/types/auth'
 
 // Admin pages
-import { AdminLayout, DashboardPage as AdminDashboard, PedidosPage } from '@/pages/admin'
+import { AdminLayout, DashboardPage as AdminDashboard, PedidosPage, OperadoresPage } from '@/pages/admin'
 
 // Cliente pages
 import { ClienteLayout, HomePage as ClienteHome, SolicitarServicoPage, MeusServicosPage, HistoricoPage, OficinasPage } from '@/pages/cliente'
@@ -36,8 +36,7 @@ function App() {
         >
           <Route index element={<AdminDashboard />} />
           <Route path="pedidos" element={<PedidosPage />} />
-          <Route path="metricas" element={<AdminDashboard />} />
-          <Route path="clientes" element={<AdminDashboard />} />
+          <Route path="operadores" element={<OperadoresPage />} />
           <Route path="configuracoes" element={<AdminDashboard />} />
         </Route>
 

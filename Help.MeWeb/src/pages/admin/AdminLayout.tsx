@@ -3,7 +3,6 @@ import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard,
   ClipboardList,
-  BarChart3,
   Users,
   Settings,
   LogOut,
@@ -17,8 +16,7 @@ import { cn } from '@/lib/utils'
 const menuItems = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/admin' },
   { icon: ClipboardList, label: 'Pedidos', path: '/admin/pedidos' },
-  { icon: BarChart3, label: 'Metricas', path: '/admin/metricas' },
-  { icon: Users, label: 'Clientes', path: '/admin/clientes' },
+  { icon: Users, label: 'Operadores', path: '/admin/operadores' },
   { icon: Settings, label: 'Configuracoes', path: '/admin/configuracoes' },
 ]
 
@@ -66,20 +64,44 @@ export function AdminLayout() {
         )}
       >
         {/* Logo */}
-        <div className="h-16 flex items-center justify-between px-4 border-b border-slate-200">
-          <div className="flex items-center gap-3">
-            <img src="/logo.jpg" alt="Help.Me" className="w-10 h-10 rounded-lg" />
+        <div className={cn(
+          'h-16 flex items-center border-b border-slate-200',
+          sidebarOpen ? 'justify-between px-4' : 'justify-center px-2'
+        )}>
+          <div className={cn(
+            'flex items-center',
+            sidebarOpen ? 'gap-3' : 'justify-center'
+          )}>
+            <img
+              src="/logo.jpg"
+              alt="Help.Me"
+              className={cn(
+                'rounded-lg transition-all',
+                sidebarOpen ? 'w-10 h-10' : 'w-8 h-8'
+              )}
+            />
             {sidebarOpen && (
               <span className="font-bold text-slate-900">Help.Me</span>
             )}
           </div>
-          <button
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="hidden lg:block p-1 text-slate-400 hover:text-slate-600"
-          >
-            <ChevronRight className={cn('w-5 h-5 transition-transform', !sidebarOpen && 'rotate-180')} />
-          </button>
+          {sidebarOpen && (
+            <button
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="hidden lg:block p-1 text-slate-400 hover:text-slate-600"
+            >
+              <ChevronRight className="w-5 h-5" />
+            </button>
+          )}
         </div>
+        {/* Botao para expandir quando fechado */}
+        {!sidebarOpen && (
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="hidden lg:flex w-full justify-center py-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50"
+          >
+            <ChevronRight className="w-5 h-5 rotate-180" />
+          </button>
+        )}
 
         {/* User Info */}
         <div className={cn('p-4 border-b border-slate-200', !sidebarOpen && 'px-2')}>
