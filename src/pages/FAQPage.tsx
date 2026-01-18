@@ -23,7 +23,7 @@ const faqData: FAQCategory[] = [
     icon: <HelpCircle className="w-5 h-5" />,
     items: [
       {
-        question: 'O que é a Help.Me?',
+        question: 'O que é a Help.Meeeee?',
         answer: 'A Help.Me é uma plataforma que conecta motoristas a oficinas mecânicas de confiança. Facilitamos o agendamento de serviços, acompanhamento de manutenções e avaliação de oficinas, tudo em um só lugar.',
       },
       {

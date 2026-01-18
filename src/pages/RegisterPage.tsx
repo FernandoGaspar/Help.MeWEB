@@ -5,6 +5,7 @@ import { Eye, EyeOff, Mail, Lock, User, Building2, ArrowLeft, AlertCircle, Check
 import { Button, Input, PasswordStrength } from '@/components/ui'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/contexts/AuthContext'
+import { UserProfile } from '@/types/auth'
 
 type UserType = 'cliente' | 'prestador'
 
@@ -134,12 +135,19 @@ export function RegisterPage() {
       return
     }
 
+    // Definir idPerfilUsuario baseado no tipo selecionado
+    // Cliente = 4, Oficina (Administrativo) = 1
+    const idPerfilUsuario = userType === 'cliente'
+      ? UserProfile.CLIENTE_FINAL
+      : UserProfile.ADMINISTRATIVO
+
     const result = await register({
       nome: formData.name,
       email: formData.email,
       login: formData.login,
       senha: formData.password,
       companhia: formData.company || formData.name,
+      idPerfilUsuario,
     })
 
     if (result.success) {
