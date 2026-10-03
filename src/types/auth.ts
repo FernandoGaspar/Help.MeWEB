@@ -6,6 +6,7 @@ export const UserProfile = {
   OPERADOR: 2,
   MASTER: 3,
   CLIENTE_FINAL: 4,
+  MOTORISTA: 5,
 } as const
 
 export type UserProfileType = typeof UserProfile[keyof typeof UserProfile]
@@ -16,10 +17,11 @@ export const PROFILE_TO_ROLE: Record<number, string> = {
   2: 'operador',
   3: 'master',
   4: 'cliente',
+  5: 'motorista',
 }
 
 // Perfis permitidos na versao web
-export const WEB_ALLOWED_PROFILES = [UserProfile.ADMINISTRATIVO, UserProfile.CLIENTE_FINAL, ...(LOGISTICA_ENABLED ? [UserProfile.OPERADOR] : [])]
+export const WEB_ALLOWED_PROFILES = [UserProfile.ADMINISTRATIVO, UserProfile.CLIENTE_FINAL, ...(LOGISTICA_ENABLED ? [UserProfile.MOTORISTA] : [])]
 
 // Contexto do usuario (dados especificos por perfil)
 export interface UserContext {
@@ -61,5 +63,6 @@ export interface RegisterData {
   login: string
   senha: string
   companhia: string
-  idPerfilUsuario?: number // 1=Oficina, 4=Cliente
+  idPerfilUsuario?: number // 1=Oficina, 4=Cliente, 5=Motorista de entregas
+  telefone?: string // obrigatorio para motorista
 }

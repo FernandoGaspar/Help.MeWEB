@@ -1,15 +1,30 @@
 import { useState, useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Eye, EyeOff, Mail, Lock, User, Building2, ArrowLeft, AlertCircle, CheckCircle } from 'lucide-react'
+import { Eye, EyeOff, Mail, Lock, User, Building2, ArrowLeft, AlertCircle, CheckCircle, Phone } from 'lucide-react'
 import { Button, Input, PasswordStrength } from '@/components/ui'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/contexts/AuthContext'
 import { UserProfile } from '@/types/auth'
+import { LOGISTICA_ENABLED } from '@/services/logistica'
 
-type UserType = 'cliente' | 'prestador'
+type UserType = 'cliente' | 'prestador' | 'motorista'
+
+const USER_TYPES: { value: UserType; label: string }[] = [
+  { value: 'cliente', label: 'Sou Cliente' },
+  { value: 'prestador', label: 'Sou Oficina' },
+  ...(LOGISTICA_ENABLED ? [{ value: 'motorista' as UserType, label: 'Sou Motorista' }] : []),
+]
+
+const PERFIL_POR_TIPO: Record<UserType, number> = {
+  cliente: UserProfile.CLIENTE_FINAL,
+  prestador: UserProfile.ADMINISTRATIVO,
+  motorista: UserProfile.MOTORISTA,
+}
 
 // Validadores
+const somenteDigitos = (value: string) => value.replace(/\D/g, '')
+const isValidPhone = (phone: string) => { const n = somenteDigitos(phone).length; return n >= 10 && n <= 13 }
 const isValidEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
 const isValidUsername = (username: string) => /^[a-zA-Z0-9._]+$/.test(username) && username.length >= 3
 const isValidFullName = (name: string) => {
@@ -33,6 +48,7 @@ export function RegisterPage() {
     password: '',
     confirmPassword: '',
     company: '',
+    phone: '',
     acceptTerms: false,
   })
 
@@ -62,6 +78,11 @@ export function RegisterPage() {
       isValid: formData.confirmPassword === formData.password && formData.confirmPassword.length > 0,
       error: formData.confirmPassword.length > 0 && formData.confirmPassword !== formData.password
         ? 'As senhas não coincidem' : '',
+    },
+    phone: {
+      isValid: isValidPhone(formData.phone),
+      error: formData.phone.length > 0 && !isValidPhone(formData.phone)
+        ? 'Digite o celular com DDD' : '',
     },
   }), [formData])
 
@@ -130,24 +151,27 @@ export function RegisterPage() {
       return
     }
 
+    if (userType === 'motorista' && !isValidPhone(formData.phone)) {
+      setError('Informe seu celular com DDD')
+      return
+    }
+
     if (!formData.acceptTerms) {
       setError('Você precisa aceitar os termos de uso')
       return
     }
 
-    // Definir idPerfilUsuario baseado no tipo selecionado
-    // Cliente = 4, Oficina (Administrativo) = 1
-    const idPerfilUsuario = userType === 'cliente'
-      ? UserProfile.CLIENTE_FINAL
-      : UserProfile.ADMINISTRATIVO
+    // Cliente = 4, Oficina (Administrativo) = 1, Motorista de entregas = 5
+    const idPerfilUsuario = PERFIL_POR_TIPO[userType]
 
     const result = await register({
       nome: formData.name,
       email: formData.email,
       login: formData.login,
       senha: formData.password,
-      companhia: formData.company || formData.name,
+      companhia: (userType === 'prestador' && formData.company) || formData.name,
       idPerfilUsuario,
+      ...(userType === 'motorista' ? { telefone: somenteDigitos(formData.phone) } : {}),
     })
 
     if (result.success) {
@@ -200,44 +224,42 @@ export function RegisterPage() {
 
           {/* User Type Toggle */}
           <div className="bg-slate-100 rounded-xl p-1 flex mb-8">
-            <button
-              type="button"
-              onClick={() => setUserType('cliente')}
-              className={cn(
-                'flex-1 py-3 px-4 rounded-lg font-medium transition-all duration-200',
-                userType === 'cliente'
-                  ? 'bg-white text-primary-600 shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900'
-              )}
-            >
-              Sou Cliente
-            </button>
-            <button
-              type="button"
-              onClick={() => setUserType('prestador')}
-              className={cn(
-                'flex-1 py-3 px-4 rounded-lg font-medium transition-all duration-200',
-                userType === 'prestador'
-                  ? 'bg-white text-primary-600 shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900'
-              )}
-            >
-              Sou Oficina
-            </button>
+            {USER_TYPES.map(({ value, label }) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setUserType(value)}
+                className={cn(
+                  'flex-1 py-3 px-2 sm:px-4 rounded-lg font-medium transition-all duration-200',
+                  userType === value
+                    ? 'bg-white text-primary-600 shadow-sm'
+                    : 'text-slate-600 hover:text-slate-900'
+                )}
+              >
+                {label}
+              </button>
+            ))}
           </div>
 
           {/* Description */}
           <div className="bg-primary-50 border border-primary-100 rounded-xl p-4 mb-6">
             <p className="text-sm text-primary-700">
-              {userType === 'cliente' ? (
+              {userType === 'cliente' && (
                 <>
-                  <strong>Como motorista</strong>, você poderá agendar manutenções, acompanhar
+                  <strong>Como cliente</strong>, você poderá agendar manutenções, acompanhar
                   reparos e avaliar oficinas.
                 </>
-              ) : (
+              )}
+              {userType === 'prestador' && (
                 <>
                   <strong>Como oficina</strong>, você poderá oferecer seus serviços,
                   gerenciar sua agenda e aumentar sua clientela.
+                </>
+              )}
+              {userType === 'motorista' && (
+                <>
+                  <strong>Como motorista de entregas</strong>, você receberá romaneios, verá os
+                  destinos e confirmará cada entrega com foto do comprovante.
                 </>
               )}
             </p>
@@ -305,6 +327,23 @@ export function RegisterPage() {
                 icon={<Building2 className="w-5 h-5" />}
                 value={formData.company}
                 onChange={(e) => setFormData({ ...formData, company: e.target.value })}
+              />
+            )}
+
+            {userType === 'motorista' && (
+              <Input
+                label="Celular com DDD"
+                type="tel"
+                inputMode="tel"
+                placeholder="(11) 99999-0000"
+                icon={<Phone className="w-5 h-5" />}
+                value={formData.phone}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                onBlur={() => handleBlur('phone')}
+                error={touched.phone ? validations.phone.error : undefined}
+                isValid={touched.phone && validations.phone.isValid}
+                hint="A empresa de entregas usa este número para contato"
+                required
               />
             )}
 
@@ -424,14 +463,13 @@ export function RegisterPage() {
               className="w-24 h-24 mx-auto mb-8"
             />
             <h2 className="text-4xl font-bold mb-4">
-              {userType === 'cliente'
-                ? 'Seu veículo em boas mãos'
-                : 'Expanda sua oficina'}
+              {{ cliente: 'Seu veículo em boas mãos', prestador: 'Expanda sua oficina',
+                motorista: 'Suas entregas na palma da mão' }[userType]}
             </h2>
             <p className="text-white/80 text-lg">
-              {userType === 'cliente'
-                ? 'Acesse sua conta e gerencie suas manutenções, acompanhe reparos e muito mais.'
-                : 'Alcance mais clientes, gerencie sua agenda e cresça com a gente.'}
+              {{ cliente: 'Acesse sua conta e gerencie suas manutenções, acompanhe reparos e muito mais.',
+                prestador: 'Alcance mais clientes, gerencie sua agenda e cresça com a gente.',
+                motorista: 'Receba romaneios, siga os destinos e confirme cada entrega pelo celular.' }[userType]}
             </p>
           </motion.div>
         </div>

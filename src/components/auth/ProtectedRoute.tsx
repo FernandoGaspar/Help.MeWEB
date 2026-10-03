@@ -30,8 +30,10 @@ export function ProtectedRoute({ children, allowedProfiles }: ProtectedRouteProp
     return <Navigate to="/login" state={{ from: location }} replace />
   }
 
-  // Bloquear perfis 2 (Operador) e 3 (Master) - devem usar apenas o app mobile
-  if ((user.idPerfilUsuario === UserProfile.OPERADOR && !(LOGISTICA_ENABLED && allowedProfiles?.includes(UserProfile.OPERADOR))) || user.idPerfilUsuario === UserProfile.MASTER) {
+  // Bloquear perfis 2 (Operador) e 3 (Master) - devem usar apenas o app mobile.
+  // Motorista (5) usa somente a tela de entregas, e apenas com o modulo logistico ativo.
+  if (user.idPerfilUsuario === UserProfile.OPERADOR || user.idPerfilUsuario === UserProfile.MASTER
+      || (user.idPerfilUsuario === UserProfile.MOTORISTA && !LOGISTICA_ENABLED)) {
     return <Navigate to="/acesso-restrito" replace />
   }
 
@@ -43,6 +45,9 @@ export function ProtectedRoute({ children, allowedProfiles }: ProtectedRouteProp
     }
     if (user.idPerfilUsuario === UserProfile.CLIENTE_FINAL) {
       return <Navigate to="/cliente" replace />
+    }
+    if (user.idPerfilUsuario === UserProfile.MOTORISTA) {
+      return <Navigate to="/motorista" replace />
     }
     return <Navigate to="/login" replace />
   }

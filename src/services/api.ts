@@ -98,6 +98,7 @@ export const api = {
         senha: data.senha,
         companhia: data.companhia,
         idPerfilUsuario: data.idPerfilUsuario || 4,
+        ...(data.telefone ? { telefone: data.telefone } : {}),
       }
 
       const response = await fetchWithTimeout(`${BASE_URL}/cadastroUsuario`, {

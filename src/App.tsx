@@ -16,7 +16,7 @@ function App() {
   return (
     <AuthProvider>
       <Routes>
-        {LOGISTICA_ENABLED && <Route path="/motorista" element={<ProtectedRoute allowedProfiles={[UserProfile.OPERADOR]}><MotoristaPage /></ProtectedRoute>} />}
+        {LOGISTICA_ENABLED && <Route path="/motorista" element={<ProtectedRoute allowedProfiles={[UserProfile.MOTORISTA]}><MotoristaPage /></ProtectedRoute>} />}
         {/* Rotas publicas */}
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />

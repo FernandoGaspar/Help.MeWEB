@@ -96,8 +96,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return '/admin'
       case UserProfile.CLIENTE_FINAL:
         return '/cliente'
-      case UserProfile.OPERADOR:
+      case UserProfile.MOTORISTA:
         return LOGISTICA_ENABLED ? '/motorista' : '/acesso-restrito'
+      case UserProfile.OPERADOR:
+        return '/acesso-restrito'
       case UserProfile.MASTER:
         return '/acesso-restrito'
       default:
