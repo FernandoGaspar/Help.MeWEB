@@ -1,6 +1,7 @@
 import { Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { UserProfile } from '@/types/auth'
+import { LOGISTICA_ENABLED } from '@/services/logistica'
 import { Loader2 } from 'lucide-react'
 
 interface ProtectedRouteProps {
@@ -30,7 +31,7 @@ export function ProtectedRoute({ children, allowedProfiles }: ProtectedRouteProp
   }
 
   // Bloquear perfis 2 (Operador) e 3 (Master) - devem usar apenas o app mobile
-  if (user.idPerfilUsuario === UserProfile.OPERADOR || user.idPerfilUsuario === UserProfile.MASTER) {
+  if ((user.idPerfilUsuario === UserProfile.OPERADOR && !(LOGISTICA_ENABLED && allowedProfiles?.includes(UserProfile.OPERADOR))) || user.idPerfilUsuario === UserProfile.MASTER) {
     return <Navigate to="/acesso-restrito" replace />
   }
 

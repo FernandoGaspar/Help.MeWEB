@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, useCallback, type React
 import type { User, AuthResult, LoginCredentials, RegisterData } from '../types/auth'
 import { UserProfile, WEB_ALLOWED_PROFILES } from '../types/auth'
 import { api } from '../services/api'
+import { LOGISTICA_ENABLED } from '../services/logistica'
 
 interface AuthContextType {
   user: User | null
@@ -96,6 +97,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       case UserProfile.CLIENTE_FINAL:
         return '/cliente'
       case UserProfile.OPERADOR:
+        return LOGISTICA_ENABLED ? '/motorista' : '/acesso-restrito'
       case UserProfile.MASTER:
         return '/acesso-restrito'
       default:

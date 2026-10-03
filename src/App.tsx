@@ -3,6 +3,8 @@ import { LandingPage, LoginPage, RegisterPage, ForgotPasswordPage, FAQPage, Priv
 import { AuthProvider } from '@/contexts/AuthContext'
 import { ProtectedRoute } from '@/components/auth'
 import { UserProfile } from '@/types/auth'
+import { LOGISTICA_ENABLED } from '@/services/logistica'
+import { MotoristaPage } from '@/pages/MotoristaPage'
 
 // Admin pages
 import { AdminLayout, DashboardPage as AdminDashboard, PedidosPage, OperadoresPage } from '@/pages/admin'
@@ -14,6 +16,7 @@ function App() {
   return (
     <AuthProvider>
       <Routes>
+        {LOGISTICA_ENABLED && <Route path="/motorista" element={<ProtectedRoute allowedProfiles={[UserProfile.OPERADOR]}><MotoristaPage /></ProtectedRoute>} />}
         {/* Rotas publicas */}
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />

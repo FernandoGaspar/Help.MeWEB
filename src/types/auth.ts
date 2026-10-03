@@ -1,3 +1,5 @@
+import { LOGISTICA_ENABLED } from '../services/logistica'
+
 // Perfis de usuario conforme API
 export const UserProfile = {
   ADMINISTRATIVO: 1,
@@ -17,7 +19,7 @@ export const PROFILE_TO_ROLE: Record<number, string> = {
 }
 
 // Perfis permitidos na versao web
-export const WEB_ALLOWED_PROFILES = [UserProfile.ADMINISTRATIVO, UserProfile.CLIENTE_FINAL]
+export const WEB_ALLOWED_PROFILES = [UserProfile.ADMINISTRATIVO, UserProfile.CLIENTE_FINAL, ...(LOGISTICA_ENABLED ? [UserProfile.OPERADOR] : [])]
 
 // Contexto do usuario (dados especificos por perfil)
 export interface UserContext {
