@@ -99,6 +99,7 @@ export const api = {
         companhia: data.companhia,
         idPerfilUsuario: data.idPerfilUsuario || 4,
         ...(data.telefone ? { telefone: data.telefone } : {}),
+        ...(data.documento ? { documento: data.documento, dirige: data.dirige ?? true } : {}),
       }
 
       const response = await fetchWithTimeout(`${BASE_URL}/cadastroUsuario`, {

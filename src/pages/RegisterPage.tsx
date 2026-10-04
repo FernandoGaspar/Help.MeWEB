@@ -8,23 +8,24 @@ import { useAuth } from '@/contexts/AuthContext'
 import { UserProfile } from '@/types/auth'
 import { LOGISTICA_ENABLED } from '@/services/logistica'
 
-type UserType = 'cliente' | 'prestador' | 'motorista'
+type UserType = 'cliente' | 'prestador' | 'transportadora'
 
 const USER_TYPES: { value: UserType; label: string }[] = [
   { value: 'cliente', label: 'Sou Cliente' },
   { value: 'prestador', label: 'Sou Oficina' },
-  ...(LOGISTICA_ENABLED ? [{ value: 'motorista' as UserType, label: 'Sou Motorista' }] : []),
+  ...(LOGISTICA_ENABLED ? [{ value: 'transportadora' as UserType, label: 'Sou Transportadora' }] : []),
 ]
 
 const PERFIL_POR_TIPO: Record<UserType, number> = {
   cliente: UserProfile.CLIENTE_FINAL,
   prestador: UserProfile.ADMINISTRATIVO,
-  motorista: UserProfile.MOTORISTA,
+  transportadora: UserProfile.MOTORISTA,
 }
 
 // Validadores
 const somenteDigitos = (value: string) => value.replace(/\D/g, '')
 const isValidPhone = (phone: string) => { const n = somenteDigitos(phone).length; return n >= 10 && n <= 13 }
+const isValidTaxId = (doc: string) => [11, 14].includes(somenteDigitos(doc).length)
 const isValidEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
 const isValidUsername = (username: string) => /^[a-zA-Z0-9._]+$/.test(username) && username.length >= 3
 const isValidFullName = (name: string) => {
@@ -48,6 +49,8 @@ export function RegisterPage() {
     password: '',
     confirmPassword: '',
     company: '',
+    taxId: '',
+    drives: true,
     phone: '',
     acceptTerms: false,
   })
@@ -78,6 +81,11 @@ export function RegisterPage() {
       isValid: formData.confirmPassword === formData.password && formData.confirmPassword.length > 0,
       error: formData.confirmPassword.length > 0 && formData.confirmPassword !== formData.password
         ? 'As senhas não coincidem' : '',
+    },
+    taxId: {
+      isValid: isValidTaxId(formData.taxId),
+      error: formData.taxId.length > 0 && !isValidTaxId(formData.taxId)
+        ? 'Digite o CNPJ ou o CPF' : '',
     },
     phone: {
       isValid: isValidPhone(formData.phone),
@@ -151,9 +159,10 @@ export function RegisterPage() {
       return
     }
 
-    if (userType === 'motorista' && !isValidPhone(formData.phone)) {
-      setError('Informe seu celular com DDD')
-      return
+    if (userType === 'transportadora') {
+      if (!formData.company.trim()) { setError('Informe o nome da transportadora'); return }
+      if (!isValidTaxId(formData.taxId)) { setError('Informe o CNPJ ou o CPF da transportadora'); return }
+      if (!isValidPhone(formData.phone)) { setError('Informe seu celular com DDD'); return }
     }
 
     if (!formData.acceptTerms) {
@@ -169,9 +178,11 @@ export function RegisterPage() {
       email: formData.email,
       login: formData.login,
       senha: formData.password,
-      companhia: (userType === 'prestador' && formData.company) || formData.name,
+      companhia: (userType !== 'cliente' && formData.company.trim()) || formData.name,
       idPerfilUsuario,
-      ...(userType === 'motorista' ? { telefone: somenteDigitos(formData.phone) } : {}),
+      ...(userType === 'transportadora' ? {
+        telefone: somenteDigitos(formData.phone), documento: somenteDigitos(formData.taxId), dirige: formData.drives,
+      } : {}),
     })
 
     if (result.success) {
@@ -256,10 +267,11 @@ export function RegisterPage() {
                   gerenciar sua agenda e aumentar sua clientela.
                 </>
               )}
-              {userType === 'motorista' && (
+              {userType === 'transportadora' && (
                 <>
-                  <strong>Como motorista de entregas</strong>, você receberá romaneios, verá os
-                  destinos e confirmará cada entrega com foto do comprovante.
+                  <strong>Como transportadora</strong>, você cadastra seus motoristas e veículos. Os
+                  motoristas recebem os romaneios e confirmam cada entrega com foto do comprovante.
+                  Se você trabalha sozinho, marque que também faz as entregas.
                 </>
               )}
             </p>
@@ -330,7 +342,30 @@ export function RegisterPage() {
               />
             )}
 
-            {userType === 'motorista' && (
+            {userType === 'transportadora' && (<>
+              <Input
+                label="Nome da transportadora"
+                type="text"
+                placeholder="Transportes Silva ou seu nome, se trabalha sozinho"
+                icon={<Building2 className="w-5 h-5" />}
+                value={formData.company}
+                onChange={(e) => setFormData({ ...formData, company: e.target.value })}
+                maxLength={150}
+                required
+              />
+              <Input
+                label="CNPJ ou CPF"
+                type="text"
+                inputMode="numeric"
+                placeholder="00.000.000/0000-00"
+                icon={<Building2 className="w-5 h-5" />}
+                value={formData.taxId}
+                onChange={(e) => setFormData({ ...formData, taxId: e.target.value })}
+                onBlur={() => handleBlur('taxId')}
+                error={touched.taxId ? validations.taxId.error : undefined}
+                isValid={touched.taxId && validations.taxId.isValid}
+                required
+              />
               <Input
                 label="Celular com DDD"
                 type="tel"
@@ -342,10 +377,19 @@ export function RegisterPage() {
                 onBlur={() => handleBlur('phone')}
                 error={touched.phone ? validations.phone.error : undefined}
                 isValid={touched.phone && validations.phone.isValid}
-                hint="A empresa de entregas usa este número para contato"
+                hint="A empresa contratante usa este número para contato"
                 required
               />
-            )}
+              <label className="flex items-center gap-3 text-sm text-slate-700">
+                <input
+                  type="checkbox"
+                  className="w-5 h-5 rounded border-slate-300 text-primary-600"
+                  checked={formData.drives}
+                  onChange={(e) => setFormData({ ...formData, drives: e.target.checked })}
+                />
+                Eu também faço as entregas
+              </label>
+            </>)}
 
             <div>
               <div className="relative">
@@ -464,12 +508,12 @@ export function RegisterPage() {
             />
             <h2 className="text-4xl font-bold mb-4">
               {{ cliente: 'Seu veículo em boas mãos', prestador: 'Expanda sua oficina',
-                motorista: 'Suas entregas na palma da mão' }[userType]}
+                transportadora: 'Suas entregas na palma da mão' }[userType]}
             </h2>
             <p className="text-white/80 text-lg">
               {{ cliente: 'Acesse sua conta e gerencie suas manutenções, acompanhe reparos e muito mais.',
                 prestador: 'Alcance mais clientes, gerencie sua agenda e cresça com a gente.',
-                motorista: 'Receba romaneios, siga os destinos e confirme cada entrega pelo celular.' }[userType]}
+                transportadora: 'Gerencie motoristas e veículos e confirme cada entrega pelo celular.' }[userType]}
             </p>
           </motion.div>
         </div>

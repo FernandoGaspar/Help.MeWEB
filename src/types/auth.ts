@@ -63,6 +63,8 @@ export interface RegisterData {
   login: string
   senha: string
   companhia: string
-  idPerfilUsuario?: number // 1=Oficina, 4=Cliente, 5=Motorista de entregas
-  telefone?: string // obrigatorio para motorista
+  idPerfilUsuario?: number // 1=Oficina, 4=Cliente, 5=Transportadora/motorista de entregas
+  telefone?: string // transportadora
+  documento?: string // transportadora: CNPJ ou CPF
+  dirige?: boolean // transportadora: responsavel tambem faz entregas
 }
