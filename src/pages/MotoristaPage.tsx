@@ -6,6 +6,26 @@ import { MeusDados, TransportadoraPanel, button, field } from './logistica/Trans
 
 const labels = { entrega_informada: 'Entrega informada', entrega_parcial: 'Entrega parcial', nao_entregue: 'Não entregue' }
 
+// Mesmo limite que o servidor grava: fotos de celular (12 a 50 MP) ficam leves e dentro de 5 MB / 16 MP.
+const LADO_MAXIMO = 2400
+
+async function reduzirFoto(original: File): Promise<File> {
+  try {
+    const bitmap = await createImageBitmap(original, { imageOrientation: 'from-image' })
+    const escala = Math.min(1, LADO_MAXIMO / Math.max(bitmap.width, bitmap.height))
+    const canvas = document.createElement('canvas')
+    canvas.width = Math.round(bitmap.width * escala)
+    canvas.height = Math.round(bitmap.height * escala)
+    canvas.getContext('2d')!.drawImage(bitmap, 0, 0, canvas.width, canvas.height)
+    bitmap.close()
+    const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.85))
+    return blob ? new File([blob], 'comprovante.jpg', { type: 'image/jpeg' }) : original
+  } catch {
+    // Navegador sem suporte: envia o original e o servidor valida.
+    return original
+  }
+}
+
 function EntregaCard({ romaneio, entrega, token, onSaved }: {
   romaneio: Romaneio; entrega: Entrega; token: string; onSaved: () => void
 }) {
@@ -14,6 +34,8 @@ function EntregaCard({ romaneio, entrega, token, onSaved }: {
   const [recebedor, setRecebedor] = useState('')
   const [observacao, setObservacao] = useState('')
   const [foto, setFoto] = useState<File | null>(null)
+  const [preview, setPreview] = useState('')
+  const [preparing, setPreparing] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
@@ -21,6 +43,18 @@ function EntregaCard({ romaneio, entrega, token, onSaved }: {
   const attempt = useRef<{ id: string; tipo: Tipo; recebedor: string; observacao: string; foto: File | null } | null>(null)
   const events = romaneio.eventos.filter(e => e.entrega_id === entrega.id)
   const delivered = (success && tipo === 'entrega_informada') || events.some(e => e.tipo === 'entrega_informada')
+  const fotoObrigatoria = tipo !== 'nao_entregue'
+
+  useEffect(() => () => { if (preview) URL.revokeObjectURL(preview) }, [preview])
+
+  async function escolherFoto(e: React.ChangeEvent<HTMLInputElement>) {
+    const original = e.target.files?.[0]
+    e.target.value = ''
+    if (!original) return
+    setPreparing(true); setError('')
+    const reduzida = await reduzirFoto(original)
+    setFoto(reduzida); setPreview(URL.createObjectURL(reduzida)); setPreparing(false)
+  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
@@ -28,13 +62,14 @@ function EntregaCard({ romaneio, entrega, token, onSaved }: {
     setBusy(true); setError('')
     try {
       if (!attempt.current) {
+        if (fotoObrigatoria && !foto) throw new Error('Tire a foto do comprovante antes de enviar.')
         if (foto && foto.size > 5 * 1024 * 1024) throw new Error('A foto deve ter no máximo 5 MB.')
         attempt.current = { id: crypto.randomUUID(), tipo, recebedor: recebedor.trim(), observacao: observacao.trim(), foto }
       }
       const value = attempt.current
       await registrar(token, romaneio, entrega, value.id, value, value.foto)
       attempt.current = null
-      setUncertain(false); setSuccess(true); setOpen(false); setFoto(null)
+      setUncertain(false); setSuccess(true); setOpen(false); setFoto(null); setPreview('')
       onSaved()
     } catch (err) {
       // Quando a resposta se perde, preservar ID e conteudo ao tentar novamente.
@@ -73,14 +108,23 @@ function EntregaCard({ romaneio, entrega, token, onSaved }: {
         </select></label>
         {tipo !== 'nao_entregue' && <label className="block">Nome de quem recebeu<input className={field} required maxLength={200} value={recebedor} onChange={e => setRecebedor(e.target.value)} /></label>}
         {tipo !== 'entrega_informada' && <label className="block">{tipo === 'entrega_parcial' ? 'Informe o que foi entregue e o que ficou pendente' : 'Motivo'}<textarea className={field} required maxLength={1000} value={observacao} onChange={e => setObservacao(e.target.value)} /></label>}
-        <label className="block">Foto do comprovante {tipo === 'nao_entregue' ? '(opcional)' : '(obrigatória)'}
-          <input type="file" className={field} accept="image/jpeg,image/png,image/webp" capture="environment"
-            required={tipo !== 'nao_entregue'} onChange={e => setFoto(e.target.files?.[0] || null)} />
-          <span className="text-sm text-slate-500">JPEG, PNG ou WebP, até 5 MB e 16 megapixels.</span>
-        </label>
+        <div className="space-y-2">
+          <p>Foto do comprovante {fotoObrigatoria ? '(obrigatória)' : '(opcional)'}</p>
+          {preview && <img src={preview} alt="Foto do comprovante" className="max-h-64 rounded-lg border border-slate-200" />}
+          {preparing && <p role="status" className="text-sm text-slate-500">Preparando a foto…</p>}
+          <div className="flex flex-wrap gap-3">
+            {/* capture abre direto a câmera traseira no celular; no computador abre o seletor de arquivos. */}
+            <label className={`${button} cursor-pointer`}>{foto ? 'Tirar outra foto' : 'Tirar foto'}
+              <input type="file" accept="image/*" capture="environment" className="sr-only" onChange={escolherFoto} />
+            </label>
+            <label className="cursor-pointer rounded-lg border border-slate-300 px-4 py-3">Escolher da galeria
+              <input type="file" accept="image/*" className="sr-only" onChange={escolherFoto} />
+            </label>
+          </div>
+        </div>
       </fieldset>
       {uncertain && <p role="status" className="text-amber-800">Não recebemos a confirmação do servidor. Mantenha esta tela aberta e tente novamente; o mesmo registro será reenviado.</p>}
-      <div className="flex gap-3"><button disabled={busy} className={button}>{busy ? 'Enviando…' : uncertain ? 'Tentar novamente' : 'Enviar ocorrência'}</button>
+      <div className="flex gap-3"><button disabled={busy || preparing} className={button}>{busy ? 'Enviando…' : uncertain ? 'Tentar novamente' : 'Enviar ocorrência'}</button>
         {!uncertain && <button type="button" disabled={busy} className="px-4 py-3" onClick={() => setOpen(false)}>Cancelar</button>}</div>
     </form>}
   </article>
